@@ -10,7 +10,6 @@
 
 const uint8_t motor_count = 3;
 const uint8_t bldc_count = 1;
-const uint8_t servo_count = 1;
 
 SimplePWM step[motor_count];
 SimpleGPIO dir[motor_count];
@@ -27,7 +26,6 @@ const uint8_t enc_pin[motor_count] = {21, 34, 35};
 uint8_t bldc_pin[bldc_count][2] = {{32, 33}};
 uint8_t bldc_ch[bldc_count][2] = {{3, 4}};
 uint8_t bldc_encoder_pin[bldc_count][2] = {{26, 27}};
-uint8_t servo_pin[servo_count] = {25};
 
 int64_t prev_time, current_time, dt_us = 100000;
 
@@ -37,24 +35,18 @@ volatile int count[motor_count] = {0, 0, 0};
 float angle[motor_count] = {0.0f, 0.0f, 0.0f};
 float target_angle[motor_count] = {0.0f, 0.0f, 0.0f};
 float degrees_per_count[motor_count] = {1.0f, 1.0f, 1.0f};
-float kp[motor_count] = {0.0f, 0.0f, 0.0f};
+const float fixed_gain = 1.0f;
+float kp[motor_count] = {fixed_gain, fixed_gain, fixed_gain};
 float bldc_reference[bldc_count] = {0.0f};
-float bldc_gain[bldc_count][3] = {{1.0f, 0.0f, 0.0f}};
+float bldc_gain[bldc_count][3] = {{fixed_gain, fixed_gain, fixed_gain}};
 float bldc_saturation[bldc_count] = {100.0f};
 float bldc_u[bldc_count] = {0.0f};
 float bldc_error[bldc_count] = {0.0f};
+float bldc_prev_error[bldc_count] = {0.0f};
+const float bldc_position_tolerance = 1.0f;
 float bldc_degrees_per_edge[bldc_count] = {0.3644462f};
 float bldc_angle[bldc_count] = {0.0f};
 float bldc_speed[bldc_count] = {0.0f};
-float servo_angle[servo_count] = {90.0f};
-const float servo_min_angle = 0.0f;
-const float servo_max_angle = 180.0f;
-const uint32_t servo_min_pulse_us = 500;
-const uint32_t servo_max_pulse_us = 2500;
-const uint32_t servo_period_us = 20000;
-volatile uint32_t servo_pulse_us[servo_count] = {1500};
-esp_timer_handle_t servo_period_timer[servo_count];
-esp_timer_handle_t servo_pulse_timer[servo_count];
 
 enum BldcControlMode
 {
@@ -63,7 +55,9 @@ enum BldcControlMode
     BLDC_ANGLE,
 };
 
-BldcControlMode bldc_mode[bldc_count] = {BLDC_NO_CONTROL};
+BldcControlMode bldc_mode[bldc_count] = {BLDC_ANGLE};
+
+bool bldc_enabled[bldc_count] = {false};
 
 TimerConfig timer[motor_count] = {
     {LEDC_TIMER_0, 100},
