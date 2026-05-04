@@ -1,4 +1,5 @@
 #include <definitions.h>
+#include <ScaraRobotControl.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstdint>
@@ -103,6 +104,23 @@ void readBluetoothCommand()
     int bldc_motor, bldc_control_mode;
     float bldc_ref, p, i, d;
     float ignored;
+    float scara_x, scara_y, scara_z, scara_phi;
+    int scara_elbow;
+
+    if (sscanf(buffer, "K,%f,%f,%f,%f,%d",
+               &scara_x, &scara_y, &scara_z, &scara_phi, &scara_elbow) == 5)
+    {
+        setScaraTarget(scara_x, scara_y, scara_z, scara_phi,
+                       scara_elbow == 1 ? SCARA_ELBOW_UP : SCARA_ELBOW_DOWN);
+        return;
+    }
+
+    if (sscanf(buffer, "K,%f,%f,%f,%f",
+               &scara_x, &scara_y, &scara_z, &scara_phi) == 4)
+    {
+        setScaraTarget(scara_x, scara_y, scara_z, scara_phi);
+        return;
+    }
 
     if (sscanf(buffer, "B,%d,%d,%f,%f,%f,%f",
                &bldc_motor, &bldc_control_mode, &bldc_ref, &p, &i, &d) == 6)

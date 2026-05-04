@@ -1,4 +1,4 @@
-#include "./include/ScaraKinematics.h"
+#include "ScaraKinematics.h"
 
 #include <cmath>
 
