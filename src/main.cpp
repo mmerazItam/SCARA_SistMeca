@@ -40,6 +40,9 @@ void setMotorTarget(uint8_t motor, float target)
 
     target_angle[motor] = target;
     kp[motor] = fixed_gain;
+
+    if (debug_enabled)
+        printf("[STEP] motor=%u target=%.2f gain=%.2f\n", motor + 1, target_angle[motor], kp[motor]);
 }
 
 float normalizeBldcAngle(float value)
@@ -72,6 +75,11 @@ void setBldcTarget(uint8_t motor, float reference)
     bldc_gain[motor][1] = 0.0f;
     bldc_gain[motor][2] = 0.0f;
     bldc_pid[motor].setup(bldc_gain[motor], dt_us / 1000000.0f, bldc_saturation[motor]);
+
+    if (debug_enabled)
+        printf("[BLDC] motor=%u raw_ref=%.2f ref=%.2f kp=%.2f ki=%.2f kd=%.2f\n",
+               motor + 1, reference, bldc_reference[motor],
+               bldc_gain[motor][0], bldc_gain[motor][1], bldc_gain[motor][2]);
 }
 
 void stopBldc(uint8_t motor)
@@ -96,6 +104,9 @@ void readBluetoothCommand()
     memset(buffer, 0, sizeof(buffer));
     bt.read(buffer, len);
 
+    if (debug_enabled)
+        printf("[BT] cmd=\"%s\"\n", buffer);
+
     float all_pos[motor_count];
     float all_kp[motor_count];
     int motor;
@@ -110,15 +121,21 @@ void readBluetoothCommand()
     if (sscanf(buffer, "K,%f,%f,%f,%f,%d",
                &scara_x, &scara_y, &scara_z, &scara_phi, &scara_elbow) == 5)
     {
-        setScaraTarget(scara_x, scara_y, scara_z, scara_phi,
-                       scara_elbow == 1 ? SCARA_ELBOW_UP : SCARA_ELBOW_DOWN);
+        bool ok = setScaraTarget(scara_x, scara_y, scara_z, scara_phi,
+                                 scara_elbow == 1 ? SCARA_ELBOW_UP : SCARA_ELBOW_DOWN);
+        if (debug_enabled)
+            printf("[BT] scara ok=%d x=%.2f y=%.2f z=%.2f phi=%.2f elbow=%d\n",
+                   ok, scara_x, scara_y, scara_z, scara_phi, scara_elbow);
         return;
     }
 
     if (sscanf(buffer, "K,%f,%f,%f,%f",
                &scara_x, &scara_y, &scara_z, &scara_phi) == 4)
     {
-        setScaraTarget(scara_x, scara_y, scara_z, scara_phi);
+        bool ok = setScaraTarget(scara_x, scara_y, scara_z, scara_phi);
+        if (debug_enabled)
+            printf("[BT] scara ok=%d x=%.2f y=%.2f z=%.2f phi=%.2f elbow=0\n",
+                   ok, scara_x, scara_y, scara_z, scara_phi);
         return;
     }
 
@@ -209,7 +226,13 @@ void readBluetoothCommand()
     }
 
     if (sscanf(buffer, "%f,%f", &target, &gain) == 2)
+    {
         setMotorTarget(0, target);
+        return;
+    }
+
+    if (debug_enabled)
+        printf("[BT] unhandled cmd=\"%s\"\n", buffer);
 }
 
 void updateStepMotor(uint8_t motor)
@@ -279,6 +302,11 @@ void updateBldcMotor(uint8_t motor)
         stopBldc(motor);
     else
         bldc[motor].setDuty(bldc_u[motor]);
+
+    if (debug_enabled)
+        printf("[BLDC] motor=%u ref=%.2f angle=%.2f error=%.2f speed=%.2f u=%.2f\n",
+               motor + 1, bldc_reference[motor], bldc_angle[motor],
+               bldc_error[motor], bldc_speed[motor], bldc_u[motor]);
 }
 
 void controlMotors()
@@ -320,10 +348,14 @@ extern "C" void app_main()
             readBluetoothCommand();
             controlMotors();
 
-            printf("%.2f,%.2f,%.2f | %d,%d,%d | %.2f,%.2f,%.2f\n",
-                   angle[0], angle[1], angle[2],
-                   freq[0], freq[1], freq[2],
-                   bldc_angle[0], bldc_speed[0], bldc_u[0]);
+            if (debug_state_enabled)
+            {
+                printf("[STATE] step_angle=%.2f,%.2f,%.2f step_target=%.2f,%.2f,%.2f freq=%d,%d,%d bldc_ref=%.2f bldc_angle=%.2f bldc_error=%.2f bldc_speed=%.2f bldc_u=%.2f\n",
+                       angle[0], angle[1], angle[2],
+                       target_angle[0], target_angle[1], target_angle[2],
+                       freq[0], freq[1], freq[2],
+                       bldc_reference[0], bldc_angle[0], bldc_error[0], bldc_speed[0], bldc_u[0]);
+            }
         }
     }
 }

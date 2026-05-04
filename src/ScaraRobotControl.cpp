@@ -1,6 +1,7 @@
 #include "ScaraRobotControl.h"
 
 #include <cmath>
+#include <cstdio>
 #include <cstdint>
 
 extern void setMotorTarget(uint8_t motor, float target);
@@ -47,7 +48,11 @@ ScaraMotorTargets ScaraRobotControl::solve(float x_mm,
     targets.reachable = targets.solution.reachable;
 
     if (!targets.reachable)
+    {
+        printf("[SCARA] unreachable x=%.2f y=%.2f z=%.2f phi=%.2f elbow=%d\n",
+               x_mm, y_mm, z_mm, phi_deg, elbow);
         return targets;
+    }
 
     const ScaraJointAngles &joints = targets.solution.angles;
 
@@ -60,6 +65,14 @@ ScaraMotorTargets ScaraRobotControl::solve(float x_mm,
     targets.stepper_target[2] = _calibration.z_offset_units +
                                 _calibration.z_direction * joints.z_mm * _calibration.z_units_per_mm;
 
+    printf("[SCARA] pose x=%.2f y=%.2f z=%.2f phi=%.2f elbow=%d\n",
+           x_mm, y_mm, z_mm, phi_deg, elbow);
+    printf("[SCARA] joints theta1=%.2f theta2=%.2f theta3=%.2f z=%.2f\n",
+           joints.theta1_deg, joints.theta2_deg, joints.theta3_deg, joints.z_mm);
+    printf("[SCARA] targets step1=%.2f step2=%.2f bldc=%.2f step3=%.2f\n",
+           targets.stepper_target[0], targets.stepper_target[1],
+           targets.bldc_target, targets.stepper_target[2]);
+
     return targets;
 }
 
@@ -71,12 +84,16 @@ bool ScaraRobotControl::apply(float x_mm,
 {
     ScaraMotorTargets targets = solve(x_mm, y_mm, z_mm, phi_deg, elbow);
     if (!targets.reachable)
+    {
+        printf("[SCARA] apply skipped\n");
         return false;
+    }
 
     setMotorTarget(0, targets.stepper_target[0]);
     setMotorTarget(1, targets.stepper_target[1]);
     setBldcTarget(0, targets.bldc_target);
     setMotorTarget(2, targets.stepper_target[2]);
+    printf("[SCARA] apply ok\n");
     return true;
 }
 

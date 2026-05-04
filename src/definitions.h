@@ -30,6 +30,8 @@ uint8_t bldc_encoder_pin[bldc_count][2] = {{26, 27}};
 int64_t prev_time, current_time, dt_us = 100000;
 
 char buffer[128];
+const bool debug_enabled = true;
+const bool debug_state_enabled = true;
 int freq[motor_count] = {0, 0, 0};
 volatile int count[motor_count] = {0, 0, 0};
 float angle[motor_count] = {0.0f, 0.0f, 0.0f};
