@@ -22,10 +22,22 @@ static int32_t roundToSteps(float value)
 }
 
 ScaraKinematics::ScaraKinematics()
+    : _link1_mm(228.0f),
+      _link2_mm(136.5f),
+      _theta1_steps_per_deg(44.444444f),
+      _theta2_steps_per_deg(35.555555f),
+      _theta3_steps_per_deg(10.0f),
+      _z_steps_per_mm(100.0f)
 {
 }
 
 ScaraKinematics::ScaraKinematics(float link1_mm, float link2_mm)
+    : _link1_mm(228.0f),
+      _link2_mm(136.5f),
+      _theta1_steps_per_deg(44.444444f),
+      _theta2_steps_per_deg(35.555555f),
+      _theta3_steps_per_deg(10.0f),
+      _z_steps_per_mm(100.0f)
 {
     setup(link1_mm, link2_mm);
 }

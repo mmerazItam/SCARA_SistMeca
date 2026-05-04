@@ -1,5 +1,5 @@
-#ifndef __SCARAKINEMATICS_H__
-#define __SCARAKINEMATICS_H__
+#ifndef SCARA_KINEMATICS_H
+#define SCARA_KINEMATICS_H
 
 #include <cstdint>
 
@@ -63,12 +63,12 @@ public:
     ScaraJointSteps anglesToSteps(const ScaraJointAngles &angles) const;
 
 private:
-    float _link1_mm = 228.0f;
-    float _link2_mm = 136.5f;
-    float _theta1_steps_per_deg = 44.444444f;
-    float _theta2_steps_per_deg = 35.555555f;
-    float _theta3_steps_per_deg = 10.0f;
-    float _z_steps_per_mm = 100.0f;
+    float _link1_mm;
+    float _link2_mm;
+    float _theta1_steps_per_deg;
+    float _theta2_steps_per_deg;
+    float _theta3_steps_per_deg;
+    float _z_steps_per_mm;
 };
 
 #endif
