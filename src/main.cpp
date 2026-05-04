@@ -24,11 +24,11 @@ void IRAM_ATTR encoderHandler(void *arg)
 
     if (dir[motor].get())
     {
-        count[motor]++;
+        count[motor] = count[motor] + 1;
     }
     else
     {
-        count[motor]--;
+        count[motor] = count[motor] - 1;
     }
 }
 
@@ -41,6 +41,24 @@ void setMotorTarget(uint8_t motor, float target)
     kp[motor] = fixed_gain;
 }
 
+float normalizeBldcAngle(float value)
+{
+    float angle = std::fmod(value, bldc_full_turn_degrees);
+    if (angle < 0.0f)
+        angle += bldc_full_turn_degrees;
+    return angle;
+}
+
+float getBldcAbsoluteError(float reference, float angle)
+{
+    float error = normalizeBldcAngle(reference) - normalizeBldcAngle(angle);
+    if (error > bldc_full_turn_degrees / 2.0f)
+        error -= bldc_full_turn_degrees;
+    if (error < -bldc_full_turn_degrees / 2.0f)
+        error += bldc_full_turn_degrees;
+    return error;
+}
+
 void setBldcTarget(uint8_t motor, float reference)
 {
     if (motor >= bldc_count)
@@ -48,12 +66,10 @@ void setBldcTarget(uint8_t motor, float reference)
 
     bldc_enabled[motor] = true;
     bldc_mode[motor] = BLDC_ANGLE;
-    bldc_reference[motor] = reference;
-    bldc_angle[motor] = bldc_encoder[motor].getAngle();
-    bldc_prev_error[motor] = bldc_reference[motor] - bldc_angle[motor];
+    bldc_reference[motor] = normalizeBldcAngle(reference);
     bldc_gain[motor][0] = fixed_gain;
-    bldc_gain[motor][1] = fixed_gain;
-    bldc_gain[motor][2] = fixed_gain;
+    bldc_gain[motor][1] = 0.0f;
+    bldc_gain[motor][2] = 0.0f;
     bldc_pid[motor].setup(bldc_gain[motor], dt_us / 1000000.0f, bldc_saturation[motor]);
 }
 
@@ -62,10 +78,8 @@ void stopBldc(uint8_t motor)
     if (motor >= bldc_count)
         return;
 
-    bldc_enabled[motor] = false;
     bldc_u[motor] = 0.0f;
     bldc_error[motor] = 0.0f;
-    bldc_prev_error[motor] = 0.0f;
     bldc[motor].setStop(false);
 }
 
@@ -219,7 +233,7 @@ void updateBldcMotor(uint8_t motor)
         return;
     }
 
-    bldc_angle[motor] = bldc_encoder[motor].getAngle();
+    bldc_angle[motor] = normalizeBldcAngle(bldc_encoder[motor].getAngle());
     bldc_speed[motor] = bldc_encoder[motor].getSpeed();
 
     switch (bldc_mode[motor])
@@ -232,16 +246,14 @@ void updateBldcMotor(uint8_t motor)
         bldc_u[motor] = bldc_pid[motor].calculate(bldc_error[motor]);
         break;
     case BLDC_ANGLE:
-        bldc_error[motor] = bldc_reference[motor] - bldc_angle[motor];
-        if (std::fabs(bldc_error[motor]) <= bldc_position_tolerance ||
-            (bldc_prev_error[motor] * bldc_error[motor] < 0.0f))
+        bldc_error[motor] = getBldcAbsoluteError(bldc_reference[motor], bldc_angle[motor]);
+        if (std::fabs(bldc_error[motor]) <= bldc_position_tolerance)
         {
             stopBldc(motor);
             return;
         }
 
         bldc_u[motor] = bldc_pid[motor].calculate(bldc_error[motor]);
-        bldc_prev_error[motor] = bldc_error[motor];
         break;
     }
 

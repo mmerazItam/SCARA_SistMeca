@@ -35,15 +35,15 @@ volatile int count[motor_count] = {0, 0, 0};
 float angle[motor_count] = {0.0f, 0.0f, 0.0f};
 float target_angle[motor_count] = {0.0f, 0.0f, 0.0f};
 float degrees_per_count[motor_count] = {1.0f, 1.0f, 1.0f};
-const float fixed_gain = 1.0f;
+const float fixed_gain = 0.2f;
 float kp[motor_count] = {fixed_gain, fixed_gain, fixed_gain};
 float bldc_reference[bldc_count] = {0.0f};
-float bldc_gain[bldc_count][3] = {{fixed_gain, fixed_gain, fixed_gain}};
+float bldc_gain[bldc_count][3] = {{fixed_gain, 0.0f, 0.0f}};
 float bldc_saturation[bldc_count] = {100.0f};
 float bldc_u[bldc_count] = {0.0f};
 float bldc_error[bldc_count] = {0.0f};
-float bldc_prev_error[bldc_count] = {0.0f};
-const float bldc_position_tolerance = 1.0f;
+const float bldc_position_tolerance = 5.0f;
+const float bldc_full_turn_degrees = 360.0f;
 float bldc_degrees_per_edge[bldc_count] = {0.3644462f};
 float bldc_angle[bldc_count] = {0.0f};
 float bldc_speed[bldc_count] = {0.0f};
@@ -57,7 +57,7 @@ enum BldcControlMode
 
 BldcControlMode bldc_mode[bldc_count] = {BLDC_ANGLE};
 
-bool bldc_enabled[bldc_count] = {false};
+bool bldc_enabled[bldc_count] = {true};
 
 TimerConfig timer[motor_count] = {
     {LEDC_TIMER_0, 100},
