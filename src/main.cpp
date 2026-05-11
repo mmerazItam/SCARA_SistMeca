@@ -73,6 +73,11 @@ void setBldcTarget(uint8_t motor, float reference)
     setBldcTarget(motor, BLDC_POSITION, reference, fixed_gain, 0.0f, 0.0f);
 }
 
+void setBldcPositionTarget(uint8_t motor, float reference)
+{
+    setBldcTarget(motor, BLDC_POSITION, reference, fixed_gain, 0.0f, 0.0f);
+}
+
 void stopBldc(uint8_t motor)
 {
     if (motor >= bldc_count)

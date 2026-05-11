@@ -21,16 +21,16 @@ struct ScaraJointAngles
 {
     float theta1_deg;
     float theta2_deg;
-    float theta3_deg;
     float z_mm;
+    float theta4_deg;
 };
 
 struct ScaraJointSteps
 {
     int32_t theta1_steps;
     int32_t theta2_steps;
-    int32_t theta3_steps;
     int32_t z_steps;
+    int32_t theta4_steps;
 };
 
 struct ScaraSolution
@@ -49,8 +49,8 @@ public:
     void setup(float link1_mm, float link2_mm);
     void setStepScale(float theta1_steps_per_deg,
                       float theta2_steps_per_deg,
-                      float theta3_steps_per_deg,
-                      float z_steps_per_mm);
+                      float z_steps_per_mm,
+                      float theta4_steps_per_deg);
 
     ScaraSolution inverse(float x_mm,
                           float y_mm,
@@ -67,8 +67,8 @@ private:
     float _link2_mm;
     float _theta1_steps_per_deg;
     float _theta2_steps_per_deg;
-    float _theta3_steps_per_deg;
     float _z_steps_per_mm;
+    float _theta4_steps_per_deg;
 };
 
 #endif

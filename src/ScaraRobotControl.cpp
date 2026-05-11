@@ -6,6 +6,7 @@
 
 extern void setMotorTarget(uint8_t motor, float target);
 extern void setBldcTarget(uint8_t motor, float reference);
+extern void setBldcPositionTarget(uint8_t motor, float reference);
 
 ScaraRobotControl scara_robot;
 
@@ -13,13 +14,13 @@ ScaraRobotControl::ScaraRobotControl()
 {
     _calibration.theta1_direction = 1.0f;
     _calibration.theta2_direction = 1.0f;
-    _calibration.theta3_direction = 1.0f;
     _calibration.z_direction = 1.0f;
+    _calibration.theta4_direction = 1.0f;
     _calibration.theta1_offset_deg = 0.0f;
     _calibration.theta2_offset_deg = 0.0f;
-    _calibration.theta3_offset_deg = 0.0f;
     _calibration.z_offset_units = 0.0f;
     _calibration.z_units_per_mm = 100.0f;
+    _calibration.theta4_offset_deg = 0.0f;
 }
 
 void ScaraRobotControl::setup(float link1_mm, float link2_mm)
@@ -60,16 +61,16 @@ ScaraMotorTargets ScaraRobotControl::solve(float x_mm,
                                 _calibration.theta1_direction * joints.theta1_deg;
     targets.stepper_target[1] = _calibration.theta2_offset_deg +
                                 _calibration.theta2_direction * joints.theta2_deg;
-    targets.bldc_target = normalizeAngle(_calibration.theta3_offset_deg +
-                                         _calibration.theta3_direction * joints.theta3_deg);
     targets.stepper_target[2] = _calibration.z_offset_units +
                                 _calibration.z_direction * joints.z_mm * _calibration.z_units_per_mm;
+    targets.bldc_target = normalizeAngle(_calibration.theta4_offset_deg +
+                                         _calibration.theta4_direction * joints.theta4_deg);
 
     printf("[SCARA] pose x=%.2f y=%.2f z=%.2f phi=%.2f elbow=%d\n",
            x_mm, y_mm, z_mm, phi_deg, elbow);
-    printf("[SCARA] joints theta1=%.2f theta2=%.2f theta3=%.2f z=%.2f\n",
-           joints.theta1_deg, joints.theta2_deg, joints.theta3_deg, joints.z_mm);
-    printf("[SCARA] targets step1=%.2f step2=%.2f step3=%.2f bldc=%.2f\n",
+    printf("[SCARA] joints theta1=%.2f theta2=%.2f z=%.2f theta4=%.2f\n",
+           joints.theta1_deg, joints.theta2_deg, joints.z_mm, joints.theta4_deg);
+    printf("[SCARA] targets step1=%.2f step2=%.2f z_step=%.2f dc_theta4=%.2f\n",
            targets.stepper_target[0], targets.stepper_target[1],
            targets.stepper_target[2], targets.bldc_target);
 
@@ -92,7 +93,7 @@ bool ScaraRobotControl::apply(float x_mm,
     setMotorTarget(0, targets.stepper_target[0]);
     setMotorTarget(1, targets.stepper_target[1]);
     setMotorTarget(2, targets.stepper_target[2]);
-    setBldcTarget(0, targets.bldc_target);
+    setBldcPositionTarget(0, targets.bldc_target);
     printf("[SCARA] apply ok\n");
     return true;
 }

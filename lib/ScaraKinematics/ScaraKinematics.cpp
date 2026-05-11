@@ -26,8 +26,8 @@ ScaraKinematics::ScaraKinematics()
       _link2_mm(136.5f),
       _theta1_steps_per_deg(44.444444f),
       _theta2_steps_per_deg(35.555555f),
-      _theta3_steps_per_deg(10.0f),
-      _z_steps_per_mm(100.0f)
+      _z_steps_per_mm(100.0f),
+      _theta4_steps_per_deg(10.0f)
 {
 }
 
@@ -36,8 +36,8 @@ ScaraKinematics::ScaraKinematics(float link1_mm, float link2_mm)
       _link2_mm(136.5f),
       _theta1_steps_per_deg(44.444444f),
       _theta2_steps_per_deg(35.555555f),
-      _theta3_steps_per_deg(10.0f),
-      _z_steps_per_mm(100.0f)
+      _z_steps_per_mm(100.0f),
+      _theta4_steps_per_deg(10.0f)
 {
     setup(link1_mm, link2_mm);
 }
@@ -50,13 +50,13 @@ void ScaraKinematics::setup(float link1_mm, float link2_mm)
 
 void ScaraKinematics::setStepScale(float theta1_steps_per_deg,
                                    float theta2_steps_per_deg,
-                                   float theta3_steps_per_deg,
-                                   float z_steps_per_mm)
+                                   float z_steps_per_mm,
+                                   float theta4_steps_per_deg)
 {
     _theta1_steps_per_deg = theta1_steps_per_deg;
     _theta2_steps_per_deg = theta2_steps_per_deg;
-    _theta3_steps_per_deg = theta3_steps_per_deg;
     _z_steps_per_mm = z_steps_per_mm;
+    _theta4_steps_per_deg = theta4_steps_per_deg;
 }
 
 ScaraSolution ScaraKinematics::inverse(float x_mm,
@@ -89,8 +89,8 @@ ScaraSolution ScaraKinematics::inverse(float x_mm,
     solution.reachable = true;
     solution.angles.theta1_deg = theta1_deg;
     solution.angles.theta2_deg = theta2_deg;
-    solution.angles.theta3_deg = phi_deg - theta1_deg - theta2_deg;
     solution.angles.z_mm = z_mm;
+    solution.angles.theta4_deg = phi_deg - theta1_deg - theta2_deg;
     solution.steps = anglesToSteps(solution.angles);
     return solution;
 }
@@ -105,7 +105,7 @@ ScaraJointSteps ScaraKinematics::anglesToSteps(const ScaraJointAngles &angles) c
     ScaraJointSteps steps = {};
     steps.theta1_steps = roundToSteps(angles.theta1_deg * _theta1_steps_per_deg);
     steps.theta2_steps = roundToSteps(angles.theta2_deg * _theta2_steps_per_deg);
-    steps.theta3_steps = roundToSteps(angles.theta3_deg * _theta3_steps_per_deg);
     steps.z_steps = roundToSteps(angles.z_mm * _z_steps_per_mm);
+    steps.theta4_steps = roundToSteps(angles.theta4_deg * _theta4_steps_per_deg);
     return steps;
 }

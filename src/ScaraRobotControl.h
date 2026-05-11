@@ -7,13 +7,13 @@ struct ScaraMotorCalibration
 {
     float theta1_direction;
     float theta2_direction;
-    float theta3_direction;
     float z_direction;
+    float theta4_direction;
     float theta1_offset_deg;
     float theta2_offset_deg;
-    float theta3_offset_deg;
     float z_offset_units;
     float z_units_per_mm;
+    float theta4_offset_deg;
 };
 
 struct ScaraMotorTargets
